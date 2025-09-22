@@ -9,7 +9,7 @@
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       margin: 0;
-      padding: 8px; /* giảm padding tổng thể */
+      padding: 8px;
       display: flex;
       justify-content: center;
     }
@@ -18,14 +18,14 @@
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      padding: 10px 14px; /* giảm padding trong box */
+      padding: 10px 14px;
       width: 600px;
     }
 
     .monitor-box h2 {
       text-align: center;
-      margin: 4px 0 8px 0; /* giảm lề trên & dưới */
-      font-size: 17px;      /* nhỏ gọn hơn */
+      margin: 4px 0 8px 0;
+      font-size: 17px;
       color: #333;
     }
 
@@ -50,9 +50,9 @@
       font-weight: bold;
     }
 
-    .warning.safe { color: green; }
-    .warning.fire { color: red; }
-    .warning.intruder { color: orange; }
+    .safe { color: green; }
+    .fire { color: red; }
+    .intruder { color: orange; }
   </style>
 </head>
 <body>
@@ -65,7 +65,8 @@
       <div class="item">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
       <div class="item">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
       <div class="item">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
-      <div class="item">⚠️ <span>Cảnh báo: <b id="warning" class="warning safe">Không có cảnh báo</b></span></div>
+      <div class="item">🔥 <span>Khí gas: <b id="gas" class="warning safe">An toàn</b></span></div>
+      <div class="item">🚶 <span>Chuyển động: <b id="motion" class="warning safe">Không phát hiện</b></span></div>
     </div>
   </div>
 
@@ -79,38 +80,50 @@
     const press = document.getElementById("pressure");
     const soil = document.getElementById("soil");
     const ozone = document.getElementById("ozone");
-    const warning = document.getElementById("warning");
+    const gas = document.getElementById("gas");
+    const motion = document.getElementById("motion");
 
-    let configTemp, configHumi, configPress, configSoil, configOzone, configWarning;
+    let configTemp, configHumi, configPress, configSoil, configOzone, configGas, configMotion;
 
     eraWidget.init({
       onConfiguration: (configuration) => {
-        configTemp = configuration.realtime_configs[0];
-        configHumi = configuration.realtime_configs[1];
-        configPress = configuration.realtime_configs[2];
-        configSoil = configuration.realtime_configs[3];
-        configOzone = configuration.realtime_configs[4];
-        configWarning = configuration.realtime_configs[5];
+        configTemp   = configuration.realtime_configs[0];
+        configHumi   = configuration.realtime_configs[1];
+        configPress  = configuration.realtime_configs[2];
+        configSoil   = configuration.realtime_configs[3];
+        configOzone  = configuration.realtime_configs[4];
+        configGas    = configuration.realtime_configs[5]; // sensor khí gas
+        configMotion = configuration.realtime_configs[6]; // sensor chuyển động
       },
 
       onValues: (values) => {
-        if (configTemp) temp.textContent = values[configTemp.id].value;
-        if (configHumi) humi.textContent = values[configHumi.id].value;
-        if (configPress) press.textContent = values[configPress.id].value;
-        if (configSoil) soil.textContent = values[configSoil.id].value;
-        if (configOzone) ozone.textContent = values[configOzone.id].value;
+        if (configTemp)   temp.textContent   = values[configTemp.id].value;
+        if (configHumi)   humi.textContent   = values[configHumi.id].value;
+        if (configPress)  press.textContent  = values[configPress.id].value;
+        if (configSoil)   soil.textContent   = values[configSoil.id].value;
+        if (configOzone)  ozone.textContent  = values[configOzone.id].value;
 
-        if (configWarning) {
-          const wVal = values[configWarning.id].value;
-          if (wVal == 0) {
-            warning.textContent = "Không có cảnh báo";
-            warning.className = "warning safe";
-          } else if (wVal == 1) {
-            warning.textContent = "Cảnh báo cháy nổ";
-            warning.className = "warning fire";
-          } else if (wVal == 2) {
-            warning.textContent = "Cảnh báo người lạ";
-            warning.className = "warning intruder";
+        // Kiểm tra cảnh báo khí gas
+        if (configGas) {
+          const gasVal = values[configGas.id].value;
+          if (gasVal == 1) {
+            gas.textContent = "Phát hiện khí gas!";
+            gas.className = "warning fire";
+          } else {
+            gas.textContent = "An toàn";
+            gas.className = "warning safe";
+          }
+        }
+
+        // Kiểm tra cảnh báo chuyển động
+        if (configMotion) {
+          const motionVal = values[configMotion.id].value;
+          if (motionVal == 1) {
+            motion.textContent = "Có người!";
+            motion.className = "warning intruder";
+          } else {
+            motion.textContent = "Không phát hiện";
+            motion.className = "warning safe";
           }
         }
       },
