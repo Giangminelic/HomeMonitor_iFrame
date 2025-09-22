@@ -19,7 +19,7 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       padding: 16px;
-      width: 350px;
+      width: 600px; /* rộng ngang */
     }
 
     .monitor-box h2 {
@@ -29,16 +29,15 @@
       color: #333;
     }
 
-    .status {
-      font-weight: bold;
-      color: red;
-      margin-bottom: 10px;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px 20px;
     }
 
     .item {
       display: flex;
       align-items: center;
-      margin: 6px 0;
       font-size: 14px;
     }
 
@@ -51,32 +50,23 @@
       font-weight: bold;
     }
 
-    .warning.safe {
-      color: green;
-    }
-
-    .warning.fire {
-      color: red;
-    }
-
-    .warning.intruder {
-      color: orange;
-    }
+    .warning.safe { color: green; }
+    .warning.fire { color: red; }
+    .warning.intruder { color: orange; }
   </style>
 </head>
 <body>
   <div class="monitor-box">
     <h2>📊 Bảng giám sát</h2>
 
-    <div class="item">🌡️ <span>Nhiệt độ: <b id="temperature">--</b> °C</span></div>
-    <div class="item">💧 <span>Độ ẩm: <b id="humidity">--</b> %</span></div>
-    <div class="item">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
-    <div class="item">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
-    <div class="item">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
-
-    <hr>
-
-    <div class="item">⚠️ <span>Cảnh báo: <b id="warning" class="warning safe">Không có cảnh báo</b></span></div>
+    <div class="grid">
+      <div class="item">🌡️ <span>Nhiệt độ: <b id="temperature">--</b> °C</span></div>
+      <div class="item">💧 <span>Độ ẩm: <b id="humidity">--</b> %</span></div>
+      <div class="item">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
+      <div class="item">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
+      <div class="item">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
+      <div class="item">⚠️ <span>Cảnh báo: <b id="warning" class="warning safe">Không có cảnh báo</b></span></div>
+    </div>
   </div>
 
   <!-- ERA Widget -->
@@ -100,7 +90,7 @@
         configPress = configuration.realtime_configs[2];
         configSoil = configuration.realtime_configs[3];
         configOzone = configuration.realtime_configs[4];
-        configWarning = configuration.realtime_configs[5]; // giá trị cảnh báo
+        configWarning = configuration.realtime_configs[5];
       },
 
       onValues: (values) => {
