@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng giám sát ERA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .monitor-box {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 16px;
+      width: 350px;
+    }
+
+    .monitor-box h2 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .status {
+      font-weight: bold;
+      color: red;
+      margin-bottom: 10px;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    .item span {
+      margin-left: 8px;
+      flex: 1;
+    }
+
+    .warning {
+      font-weight: bold;
+    }
+
+    .warning.safe {
+      color: green;
+    }
+
+    .warning.fire {
+      color: red;
+    }
+
+    .warning.intruder {
+      color: orange;
+    }
+  </style>
+</head>
+<body>
+  <div class="monitor-box">
+    <h2>📊 Bảng giám sát</h2>
+
+    <div class="item">🌡️ <span>Nhiệt độ: <b id="temperature">--</b> °C</span></div>
+    <div class="item">💧 <span>Độ ẩm: <b id="humidity">--</b> %</span></div>
+    <div class="item">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
+    <div class="item">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
+    <div class="item">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
+
+    <hr>
+
+    <div class="item">⚠️ <span>Cảnh báo: <b id="warning" class="warning safe">Không có cảnh báo</b></span></div>
+  </div>
+
+  <!-- ERA Widget -->
+  <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
+  <script>
+    const eraWidget = new EraWidget();
+
+    const temp = document.getElementById("temperature");
+    const humi = document.getElementById("humidity");
+    const press = document.getElementById("pressure");
+    const soil = document.getElementById("soil");
+    const ozone = document.getElementById("ozone");
+    const warning = document.getElementById("warning");
+
+    let configTemp, configHumi, configPress, configSoil, configOzone, configWarning;
+
+    eraWidget.init({
+      onConfiguration: (configuration) => {
+        configTemp = configuration.realtime_configs[0];
+        configHumi = configuration.realtime_configs[1];
+        configPress = configuration.realtime_configs[2];
+        configSoil = configuration.realtime_configs[3];
+        configOzone = configuration.realtime_configs[4];
+        configWarning = configuration.realtime_configs[5]; // giá trị cảnh báo
+      },
+
+      onValues: (values) => {
+        if (configTemp) temp.textContent = values[configTemp.id].value;
+        if (configHumi) humi.textContent = values[configHumi.id].value;
+        if (configPress) press.textContent = values[configPress.id].value;
+        if (configSoil) soil.textContent = values[configSoil.id].value;
+        if (configOzone) ozone.textContent = values[configOzone.id].value;
+
+        if (configWarning) {
+          const wVal = values[configWarning.id].value;
+          if (wVal == 0) {
+            warning.textContent = "Không có cảnh báo";
+            warning.className = "warning safe";
+          } else if (wVal == 1) {
+            warning.textContent = "Cảnh báo cháy nổ";
+            warning.className = "warning fire";
+          } else if (wVal == 2) {
+            warning.textContent = "Cảnh báo người lạ";
+            warning.className = "warning intruder";
+          }
+        }
+      },
+    });
+  </script>
+</body>
+</html>
