@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bảng giám sát ERA</title>
   <style>
     body {
@@ -37,13 +37,25 @@
 
     .item {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       font-size: 14px;
+      padding: 6px 8px;
     }
 
-    .item span {
+    .item .main {
+      display: flex;
+      align-items: center;
+    }
+
+    .item .main span {
       margin-left: 6px;
       flex: 1;
+    }
+
+    .raw {
+      font-size: 12px;
+      color: #666;
+      margin-left: 26px; /* indent small */
     }
 
     .warning {
@@ -60,73 +72,154 @@
     <h2>📊 Bảng giám sát</h2>
 
     <div class="grid">
-      <div class="item">🌡️ <span>Nhiệt độ: <b id="temperature">--</b> °C</span></div>
-      <div class="item">💧 <span>Độ ẩm: <b id="humidity">--</b> %</span></div>
-      <div class="item">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
-      <div class="item">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
-      <div class="item">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
-      <div class="item">🔥 <span>Khí gas: <b id="gas" class="warning safe">An toàn</b></span></div>
-      <div class="item">🚶 <span>Chuyển động: <b id="motion" class="warning safe">Không phát hiện</b></span></div>
+      <div class="item">
+        <div class="main">🌡️ <span>Nhiệt độ: <b id="temperature">--</b> °C</span></div>
+      </div>
+
+      <div class="item">
+        <div class="main">💧 <span>Độ ẩm: <b id="humidity">--</b> %</span></div>
+      </div>
+
+      <div class="item">
+        <div class="main">⏱️ <span>Áp suất: <b id="pressure">--</b> kPa</span></div>
+      </div>
+
+      <div class="item">
+        <div class="main">🌱 <span>Độ ẩm đất: <b id="soil">--</b> %</span></div>
+      </div>
+
+      <div class="item">
+        <div class="main">🌀 <span>Ozone: <b id="ozone">--</b> ppm</span></div>
+        <div id="ozoneRaw" class="raw">raw: --</div>
+      </div>
+
+      <div class="item">
+        <div class="main">🔥 <span>Khí gas: <b id="gas" class="warning safe">An toàn</b></span></div>
+        <div id="gasRaw" class="raw">raw: --</div>
+      </div>
+
+      <div class="item">
+        <div class="main">🚶 <span>Chuyển động: <b id="motion" class="warning safe">Không phát hiện</b></span></div>
+        <div id="motionRaw" class="raw">raw: --</div>
+      </div>
     </div>
   </div>
 
   <!-- ERA Widget -->
   <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
   <script>
+    // Helper: kiểm tra giá trị "ON"
+    function isOnValue(val) {
+      if (val === undefined || val === null) return false;
+      // chuyển về chuỗi viết thường để so sánh dễ
+      const s = String(val).trim().toLowerCase();
+      return s === "1" || s === "true" || s === "on" || s === "alert" || s === "detected";
+    }
+
     const eraWidget = new EraWidget();
 
-    const temp = document.getElementById("temperature");
-    const humi = document.getElementById("humidity");
-    const press = document.getElementById("pressure");
-    const soil = document.getElementById("soil");
-    const ozone = document.getElementById("ozone");
-    const gas = document.getElementById("gas");
-    const motion = document.getElementById("motion");
+    const tempEl = document.getElementById("temperature");
+    const humiEl = document.getElementById("humidity");
+    const pressEl = document.getElementById("pressure");
+    const soilEl = document.getElementById("soil");
+    const ozoneEl = document.getElementById("ozone");
+    const ozoneRawEl = document.getElementById("ozoneRaw");
+    const gasEl = document.getElementById("gas");
+    const gasRawEl = document.getElementById("gasRaw");
+    const motionEl = document.getElementById("motion");
+    const motionRawEl = document.getElementById("motionRaw");
 
     let configTemp, configHumi, configPress, configSoil, configOzone, configGas, configMotion;
 
     eraWidget.init({
       onConfiguration: (configuration) => {
+        console.log("ERA configuration:", configuration);
+        // Gán mặc định theo index (giữ tương thích với code cũ).
         configTemp   = configuration.realtime_configs[0];
         configHumi   = configuration.realtime_configs[1];
         configPress  = configuration.realtime_configs[2];
         configSoil   = configuration.realtime_configs[3];
         configOzone  = configuration.realtime_configs[4];
-        configGas    = configuration.realtime_configs[5]; // sensor khí gas
-        configMotion = configuration.realtime_configs[6]; // sensor chuyển động
+        configGas    = configuration.realtime_configs[5];
+        configMotion = configuration.realtime_configs[6];
+
+        // Nếu bạn muốn an toàn hơn, có thể tìm theo tên như:
+        // configMotion = configuration.realtime_configs.find(c => c.name && c.name.toLowerCase().includes('motion')) || configMotion;
+
+        console.log("Mapped configs:", {
+          temp: configTemp && configTemp.id,
+          humi: configHumi && configHumi.id,
+          press: configPress && configPress.id,
+          soil: configSoil && configSoil.id,
+          ozone: configOzone && configOzone.id,
+          gas: configGas && configGas.id,
+          motion: configMotion && configMotion.id
+        });
       },
 
       onValues: (values) => {
-        if (configTemp)   temp.textContent   = values[configTemp.id].value;
-        if (configHumi)   humi.textContent   = values[configHumi.id].value;
-        if (configPress)  press.textContent  = values[configPress.id].value;
-        if (configSoil)   soil.textContent   = values[configSoil.id].value;
-        if (configOzone)  ozone.textContent  = values[configOzone.id].value;
+        // Debug toàn bộ values để biết server trả gì
+        console.log("onValues payload:", values);
 
-        // Kiểm tra cảnh báo khí gas
+        if (configTemp && values[configTemp.id]) {
+          tempEl.textContent = values[configTemp.id].value;
+        }
+        if (configHumi && values[configHumi.id]) {
+          humiEl.textContent = values[configHumi.id].value;
+        }
+        if (configPress && values[configPress.id]) {
+          pressEl.textContent = values[configPress.id].value;
+        }
+        if (configSoil && values[configSoil.id]) {
+          soilEl.textContent = values[configSoil.id].value;
+        }
+
+        // Ozone: cập nhật giá trị hiển thị và raw
+        if (configOzone) {
+          const ozoneVal = values[configOzone.id] ? values[configOzone.id].value : undefined;
+          if (ozoneVal !== undefined) {
+            ozoneEl.textContent = ozoneVal;
+            ozoneRawEl.textContent = "raw: " + ozoneVal;
+          } else {
+            ozoneRawEl.textContent = "raw: --";
+          }
+        }
+
+        // Gas: cảnh báo + raw (mở rộng điều kiện nhận dạng)
         if (configGas) {
-          const gasVal = values[configGas.id].value;
-          if (gasVal == 1 || gasVal === true || gasVal === "ON" || gasVal === "ALERT") {
-            gas.textContent = "Phát hiện khí gas!";
-            gas.className = "warning fire";
+          const gasVal = values[configGas.id] ? values[configGas.id].value : undefined;
+          console.log("Gas value raw:", gasVal);
+          gasRawEl.textContent = gasVal === undefined ? "raw: --" : ("raw: " + gasVal);
+
+          // dùng hàm isOnValue để nhận nhiều dạng giá trị
+          if (isOnValue(gasVal)) {
+            gasEl.textContent = "Phát hiện khí gas!";
+            gasEl.classList.remove("safe");
+            gasEl.classList.add("fire");
           } else {
-            gas.textContent = "An toàn";
-            gas.className = "warning safe";
+            gasEl.textContent = "An toàn";
+            gasEl.classList.remove("fire");
+            gasEl.classList.add("safe");
           }
         }
 
-        // Kiểm tra cảnh báo chuyển động
+        // Motion: cảnh báo + raw
         if (configMotion) {
-          const motionVal = values[configMotion.id].value;
-          if (motionVal == 1 || motionVal === true || motionVal === "ON" || motionVal === "DETECTED") {
-            motion.textContent = "Có người!";
-            motion.className = "warning intruder";
+          const motionVal = values[configMotion.id] ? values[configMotion.id].value : undefined;
+          console.log("Motion value raw:", motionVal);
+          motionRawEl.textContent = motionVal === undefined ? "raw: --" : ("raw: " + motionVal);
+
+          if (isOnValue(motionVal)) {
+            motionEl.textContent = "Có người!";
+            motionEl.classList.remove("safe");
+            motionEl.classList.add("intruder");
           } else {
-            motion.textContent = "Không phát hiện";
-            motion.className = "warning safe";
+            motionEl.textContent = "Không phát hiện";
+            motionEl.classList.remove("intruder");
+            motionEl.classList.add("safe");
           }
         }
-      },
+      }
     });
   </script>
 </body>
