@@ -106,7 +106,7 @@
         // Kiểm tra cảnh báo khí gas
         if (configGas) {
           const gasVal = values[configGas.id].value;
-          if (gasVal == 1) {
+          if (gasVal == 1 || gasVal === true || gasVal === "ON" || gasVal === "ALERT") {
             gas.textContent = "Phát hiện khí gas!";
             gas.className = "warning fire";
           } else {
@@ -118,7 +118,7 @@
         // Kiểm tra cảnh báo chuyển động
         if (configMotion) {
           const motionVal = values[configMotion.id].value;
-          if (motionVal == 1) {
+          if (motionVal == 1 || motionVal === true || motionVal === "ON" || motionVal === "DETECTED") {
             motion.textContent = "Có người!";
             motion.className = "warning intruder";
           } else {
